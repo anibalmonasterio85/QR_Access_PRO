@@ -1,0 +1,364 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="space-y-6 fade-in">
+    <!-- Header -->
+    <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+            <h1 class="text-2xl font-bold text-slate-800 flex items-center gap-2">
+                <i class="fas fa-chart-line text-primary-600"></i>
+                Panel de Control
+            </h1>
+            <p class="text-slate-500 text-sm mt-1">Monitoreo en tiempo real de accesos e intentos.</p>
+        </div>
+        <div class="flex gap-2">
+            <button onclick="Dashboard.exportToPDF()" class="btn-secondary flex items-center gap-2 text-sm text-red-600 hover:text-red-700 hover:bg-red-50 border-red-200">
+                <i class="fas fa-file-pdf"></i> PDF
+            </button>
+            <button onclick="Dashboard.exportToExcel()" class="btn-secondary flex items-center gap-2 text-sm text-green-600 hover:text-green-700 hover:bg-green-50 border-green-200">
+                <i class="fas fa-file-excel"></i> Excel
+            </button>
+        </div>
+    </div>
+
+    <!-- Stats Row -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div class="glass-panel p-6 flex items-center gap-4 hover:-translate-y-1 transition-transform duration-300">
+            <div class="w-12 h-12 rounded-full bg-green-100 flex items-center justify-center text-green-600 shadow-sm border border-green-200">
+                <i class="fas fa-check-circle text-2xl"></i>
+            </div>
+            <div>
+                <p class="text-sm font-medium text-slate-500">Accesos Permitidos</p>
+                <h3 class="text-3xl font-bold text-slate-800" id="stat-permitidos">{{ permitidos }}</h3>
+            </div>
+        </div>
+        
+        <div class="glass-panel p-6 flex items-center gap-4 hover:-translate-y-1 transition-transform duration-300">
+            <div class="w-12 h-12 rounded-full bg-red-100 flex items-center justify-center text-red-600 shadow-sm border border-red-200">
+                <i class="fas fa-times-circle text-2xl"></i>
+            </div>
+            <div>
+                <p class="text-sm font-medium text-slate-500">Accesos Denegados</p>
+                <h3 class="text-3xl font-bold text-slate-800" id="stat-denegados">{{ denegados }}</h3>
+            </div>
+        </div>
+        
+        <div class="glass-panel p-6 flex items-center gap-4 hover:-translate-y-1 transition-transform duration-300">
+            <div class="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 shadow-sm border border-blue-200">
+                <i class="fas fa-qrcode text-2xl"></i>
+            </div>
+            <div>
+                <p class="text-sm font-medium text-slate-500">Total Intentos</p>
+                <h3 class="text-3xl font-bold text-slate-800" id="stat-total">{{ permitidos + denegados }}</h3>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content Grid -->
+    <div class="grid grid-cols-1 xl:grid-cols-3 gap-6">
+        <!-- Chart -->
+        <div class="glass-panel col-span-1 xl:col-span-2 flex flex-col h-[450px]">
+            <div class="p-5 border-b border-slate-100 flex items-center justify-between">
+                <h3 class="font-bold text-slate-800 flex items-center gap-2">
+                    <i class="fas fa-chart-bar text-primary-500"></i> Últimos 7 Días
+                </h3>
+            </div>
+            <div class="flex-grow p-4 relative">
+                <canvas id="grafico-accesos" class="absolute inset-4"
+                        data-labels='{{ labels | tojson }}'
+                        data-permitidos='{{ data_permitidos | tojson }}'
+                        data-denegados='{{ data_denegados | tojson }}'>
+                </canvas>
+            </div>
+        </div>
+
+        <!-- Filters sidebar -->
+        <div class="glass-panel col-span-1 flex flex-col">
+            <div class="p-5 border-b border-slate-100">
+                <h3 class="font-bold text-slate-800 flex items-center gap-2">
+                    <i class="fas fa-filter text-primary-500"></i> Filtros de Búsqueda
+                </h3>
+            </div>
+            <div class="p-5 space-y-4">
+                <div>
+                    <label class="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1">Busqueda Rápida</label>
+                    <div class="relative">
+                        <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"></i>
+                        <input type="text" class="input-field pl-10" data-filter="busqueda" placeholder="Nombre o ID del código QR">
+                    </div>
+                </div>
+                
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1">Desde</label>
+                        <input type="date" class="input-field py-2 text-sm" data-filter="fecha_inicio">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1">Hasta</label>
+                        <input type="date" class="input-field py-2 text-sm" data-filter="fecha_fin">
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1">Resultado</label>
+                    <div class="relative">
+                        <select class="input-field appearance-none cursor-pointer" data-filter="resultado">
+                            <option value="%">Todos los resultados</option>
+                            <option value="PERMITIDO">Solamente Permitidos</option>
+                            <option value="DENEGADO">Solamente Denegados</option>
+                        </select>
+                        <i class="fas fa-chevron-down absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none text-xs"></i>
+                    </div>
+                </div>
+
+                <div class="pt-4 flex gap-3">
+                    <button class="btn-primary flex-1 py-2 shadow-md" id="btn-aplicar-filtros">
+                        <i class="fas fa-check mr-1"></i> Aplicar
+                    </button>
+                    <button class="btn-secondary py-2 px-4 shadow-sm" id="btn-limpiar-filtros" title="Limpiar Filtros">
+                        <i class="fas fa-undo text-slate-500"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Data Table -->
+    <div class="glass-panel overflow-hidden">
+        <div class="p-5 border-b border-slate-100 flex items-center justify-between bg-white rounded-t-2xl">
+            <h3 class="font-bold text-slate-800 flex items-center gap-2">
+                <i class="fas fa-history text-primary-500"></i> Historial de Accesos
+            </h3>
+            <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800" id="live-status">
+                <span class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
+                En Vivo
+            </span>
+        </div>
+        
+        <div class="overflow-x-auto">
+            <table class="w-full text-left border-collapse">
+                <thead>
+                    <tr class="bg-slate-50 border-b border-slate-200">
+                        <th class="px-6 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">Usuario / Detalles</th>
+                        <th class="px-6 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">Resultado</th>
+                        <th class="px-6 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">Fecha y Hora</th>
+                    </tr>
+                </thead>
+                <tbody id="tabla-body" class="divide-y divide-slate-100 bg-white">
+                    <!-- Skeleton Loader inicial -->
+                    <tr class="animate-pulse">
+                        <td class="px-6 py-4"><div class="h-4 bg-slate-200 rounded w-3/4"></div></td>
+                        <td class="px-6 py-4"><div class="h-4 bg-slate-200 rounded w-1/4"></div></td>
+                        <td class="px-6 py-4"><div class="h-4 bg-slate-200 rounded w-2/4"></div></td>
+                    </tr>
+                    <tr class="animate-pulse">
+                        <td class="px-6 py-4"><div class="h-4 bg-slate-200 rounded w-1/2"></div></td>
+                        <td class="px-6 py-4"><div class="h-4 bg-slate-200 rounded w-1/3"></div></td>
+                        <td class="px-6 py-4"><div class="h-4 bg-slate-200 rounded w-2/3"></div></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<style>
+.fade-in { animation: fadeIn 0.4s ease-out; }
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+</style>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+const Dashboard = {
+    chart: null,
+    
+    init: function(labels, permitidos, denegados) {
+        this.initChart(labels, permitidos, denegados);
+        this.initEvents();
+        this.loadData(Filters.getValues());
+        this.startLiveUpdates();
+    },
+    
+    initChart: function(labels, permitidos, denegados) {
+        const ctx = document.getElementById('grafico-accesos')?.getContext('2d');
+        if (!ctx) return;
+        
+        Chart.defaults.font.family = 'Inter';
+        Chart.defaults.color = '#64748b';
+        
+        this.chart = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: labels,
+                datasets: [
+                    { 
+                        label: 'Permitidos', 
+                        data: permitidos, 
+                        backgroundColor: '#10b981',
+                        borderRadius: 4,
+                        barPercentage: 0.6
+                    },
+                    { 
+                        label: 'Denegados', 
+                        data: denegados, 
+                        backgroundColor: '#ef4444',
+                        borderRadius: 4,
+                        barPercentage: 0.6
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'top',
+                        labels: { usePointStyle: true, boxWidth: 8 }
+                    }
+                },
+                scales: { 
+                    y: { 
+                        beginAtZero: true, 
+                        ticks: { stepSize: 1 },
+                        grid: { color: '#f1f5f9', drawBorder: false }
+                    },
+                    x: {
+                        grid: { display: false, drawBorder: false }
+                    }
+                }
+            }
+        });
+    },
+    
+    initEvents: function() {
+        document.addEventListener('filtersChanged', (e) => this.loadData(e.detail));
+        document.getElementById('btn-aplicar-filtros')?.addEventListener('click', () => {
+            this.loadData(Filters.getValues());
+            this.updateLiveIndicator(true);
+        });
+        document.getElementById('btn-limpiar-filtros')?.addEventListener('click', () => {
+            document.querySelectorAll('[data-filter]').forEach(el => el.value = '');
+            // Para el select, forzar seleccionar el primero si tiene "%"
+            const sel = document.querySelector('select[data-filter="resultado"]');
+            if(sel) sel.value = "%";
+            
+            this.loadData({});
+            this.updateLiveIndicator(false);
+        });
+    },
+    
+    updateLiveIndicator: function(isFiltered) {
+        const indicator = document.getElementById('live-status');
+        if (isFiltered) {
+            indicator.className = 'inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-amber-100 text-amber-800';
+            indicator.innerHTML = '<i class="fas fa-filter text-amber-500"></i> Filtrado (Pausado)';
+        } else {
+            indicator.className = 'inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800';
+            indicator.innerHTML = '<span class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span> En Vivo';
+        }
+    },
+    
+    startLiveUpdates: function() {
+        LiveUpdates.start('/api/accesos/live', (data) => {
+            const currentFilters = Filters.getValues();
+            const isFiltering = currentFilters.busqueda !== '' || 
+                              currentFilters.fecha_inicio !== '' || 
+                              currentFilters.fecha_fin !== '' || 
+                              (currentFilters.resultado && currentFilters.resultado !== '%');
+            
+            if (!isFiltering) {
+                this.updateTable(data);
+                this.updateLiveIndicator(false);
+            }
+        });
+        
+        LiveUpdates.start('/api/stats', (stats) => {
+            document.getElementById('stat-permitidos').textContent = stats.permitidos;
+            document.getElementById('stat-denegados').textContent = stats.denegados;
+            const t = document.getElementById('stat-total');
+            const total = stats.permitidos + stats.denegados;
+            if(t.textContent != total) {
+                t.textContent = total;
+                t.classList.add('animate-pulse');
+                setTimeout(() => t.classList.remove('animate-pulse'), 1000);
+            }
+        }, 10000);
+    },
+    
+    loadData: async function(filters) {
+        const tbody = document.querySelector('#tabla-body');
+        if (tbody && tbody.children.length === 0) {
+            tbody.innerHTML = `
+                <tr class="animate-pulse"><td class="px-6 py-4"><div class="h-4 bg-slate-200 rounded w-3/4"></div></td><td class="px-6 py-4"><div class="h-4 bg-slate-200 rounded w-1/4"></div></td><td class="px-6 py-4"><div class="h-4 bg-slate-200 rounded w-2/4"></div></td></tr>
+            `;
+        }
+        
+        try {
+            const response = await fetch('/api/accesos/filter', {
+                method: 'POST',
+                headers: { 
+                    'Content-Type': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                body: JSON.stringify(filters)
+            });
+            const data = await response.json();
+            this.updateTable(data);
+        } catch (error) {
+            console.error('Error:', error);
+        }
+    },
+    
+    updateTable: function(rows) {
+        const tbody = document.getElementById('tabla-body');
+        if (!tbody) return;
+        
+        if (rows.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="3" class="px-6 py-8 text-center text-slate-500"><i class="fas fa-inbox text-3xl mb-2 text-slate-300 block"></i> No hay registros que coincidan</td></tr>';
+            return;
+        }
+        
+        tbody.innerHTML = rows.map(row => {
+            const isPermitido = row.resultado.includes('PERMITIDO');
+            const badgeClass = isPermitido 
+                ? 'bg-green-100 text-green-700 border border-green-200' 
+                : 'bg-red-100 text-red-700 border border-red-200';
+            const iconClass = isPermitido ? 'fa-check' : 'fa-times';
+            
+            return `
+                <tr class="hover:bg-slate-50 transition-colors">
+                    <td class="px-6 py-4 whitespace-nowrap overflow-hidden text-ellipsis max-w-xs sm:max-w-md text-sm font-medium text-slate-900">
+                        ${Utils.escapeHtml(row.detalle)}
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold ${badgeClass}">
+                            <i class="fas ${iconClass}"></i> ${Utils.escapeHtml(row.resultado)}
+                        </span>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-500">
+                        ${Utils.formatDate(row.fecha_hora)}
+                    </td>
+                </tr>
+            `;
+        }).join('');
+    },
+    
+    exportToPDF: function() { window.location.href = '/export/pdf'; },
+    exportToExcel: function() { window.location.href = '/export/excel'; }
+};
+
+document.addEventListener('DOMContentLoaded', () => {
+    const canvas = document.getElementById('grafico-accesos');
+    if (canvas) {
+        Dashboard.init(
+            JSON.parse(canvas.dataset.labels || '[]'),
+            JSON.parse(canvas.dataset.permitidos || '[]'),
+            JSON.parse(canvas.dataset.denegados || '[]')
+        );
+    }
+});
+</script>
+{% endblock %}

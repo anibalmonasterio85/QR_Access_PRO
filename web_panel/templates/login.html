@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="min-h-[calc(100vh-120px)] flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+    <div class="glass-panel w-full max-w-md p-8 sm:p-10 space-y-8 animate-fade-in-down">
+        <div class="text-center">
+            <div class="mx-auto h-16 w-16 bg-primary-50 rounded-full flex items-center justify-center mb-4 border border-primary-100 shadow-sm">
+                <i class="fas fa-qrcode text-3xl text-primary-600"></i>
+            </div>
+            <h2 class="text-3xl font-extrabold text-slate-900 tracking-tight">Bienvenido</h2>
+            <p class="mt-2 text-sm text-slate-500">Inicia sesión para continuar al panel</p>
+        </div>
+        
+        <form method="POST" class="mt-8 space-y-6">
+            <div class="space-y-4">
+                <div>
+                    <label for="correo" class="block text-sm font-medium text-slate-700 mb-1">
+                        <i class="fas fa-envelope text-slate-400 w-5"></i>Correo Electrónico
+                    </label>
+                    <input id="correo" name="correo" type="email" autocomplete="email" required 
+                        class="input-field" placeholder="usuario@ejemplo.com" autofocus>
+                </div>
+                
+                <div>
+                    <label for="password" class="block text-sm font-medium text-slate-700 mb-1">
+                        <i class="fas fa-lock text-slate-400 w-5"></i>Contraseña
+                    </label>
+                    <input id="password" name="password" type="password" autocomplete="current-password" required 
+                        class="input-field" placeholder="••••••••">
+                </div>
+            </div>
+            
+            <button type="submit" class="btn-primary w-full flex justify-center py-2.5 items-center gap-2 text-base">
+                <i class="fas fa-sign-in-alt"></i> Iniciar Sesión
+            </button>
+        </form>
+        
+        <div class="mt-6 pt-6 border-t border-slate-200">
+            <div class="text-center space-y-4">
+                <p class="text-sm text-slate-500">¿No tienes una cuenta registrada?</p>
+                <a href="{{ url_for('auth.register') }}" class="btn-secondary w-full inline-flex justify-center items-center py-2 gap-2 text-sm font-semibold transition-transform active:scale-[0.98]">
+                    <i class="fas fa-user-plus text-primary-500"></i> Solicitar Registro
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

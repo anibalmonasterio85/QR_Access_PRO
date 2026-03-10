@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="min-h-[60vh] flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+    <div class="glass-panel text-center max-w-lg w-full p-12 custom-shadow relative overflow-hidden">
+        
+        <!-- Decorative bg -->
+        <div class="absolute -top-10 -right-10 w-40 h-40 bg-primary-100 rounded-full blur-3xl opacity-50"></div>
+        <div class="absolute -bottom-10 -left-10 w-40 h-40 bg-indigo-100 rounded-full blur-3xl opacity-50"></div>
+
+        <div class="relative z-10">
+            <h1 class="text-9xl font-extrabold text-slate-200 tracking-tighter mb-4">404</h1>
+            <div class="w-16 h-1 bg-primary-500 mx-auto rounded-full mb-6"></div>
+            <h2 class="text-2xl font-bold text-slate-800 mb-2">Página no encontrada</h2>
+            <p class="text-slate-500 mb-8 max-w-xs mx-auto">El directorio o recurso que intentas acceder no existe o fue movido.</p>
+            
+            <a href="{{ url_for('dashboard.index') if session.user_id else url_for('auth.login') }}" class="btn-primary inline-flex items-center gap-2 py-3 px-8 shadow-lg shadow-primary-500/30">
+                <i class="fas fa-home"></i> Volver al Inicio
+            </a>
+        </div>
+        
+    </div>
+</div>
+{% endblock %}

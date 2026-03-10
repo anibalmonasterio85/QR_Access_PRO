@@ -1,0 +1,40 @@
+version: '3.8'
+
+services:
+  # Base de Datos MariaDB
+  db:
+    image: mariadb:10.11
+    container_name: qr_access_db
+    restart: always
+    environment:
+      MARIADB_ROOT_PASSWORD: root
+      MARIADB_DATABASE: qr_access
+      MARIADB_USER: flaskuser
+      MARIADB_PASSWORD: flask123
+    ports:
+      - "3306:3306"
+    volumes:
+      - mariadb_data:/var/lib/mysql
+      # Opcional: Script de inicialización automatica (si lo conviertes en .sql futuro)
+      # - ./tools/database/backup_fix.sql:/docker-entrypoint-initdb.d/init.sql
+
+  # Aplicación Web Flask
+  web:
+    build: .
+    container_name: qr_access_web
+    restart: always
+    ports:
+      - "5000:5000"
+    environment:
+      - DB_HOST=db
+      - DB_USER=flaskuser
+      - DB_PASSWORD=flask123
+      - DB_NAME=qr_access
+      - FLASK_ENV=production
+    depends_on:
+      - db
+    volumes:
+      - ./logs:/app/logs
+
+volumes:
+  mariadb_data:

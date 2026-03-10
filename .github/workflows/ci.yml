@@ -1,0 +1,49 @@
+name: QR Access CI
+
+on:
+  push:
+    branches: [ "main", "master" ]
+  pull_request:
+    branches: [ "main", "master" ]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    
+    services:
+      mysql:
+        image: mariadb:10.11
+        env:
+          MYSQL_ROOT_PASSWORD: root
+          MYSQL_DATABASE: qr_access
+          MYSQL_USER: flaskuser
+          MYSQL_PASSWORD: flask123
+        ports:
+          - 3306:3306
+        options: --health-cmd="mysqladmin ping" --health-interval=10s --health-timeout=5s --health-retries=3
+
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Set up Python 3.12
+      uses: actions/setup-python@v4
+      with:
+        python-version: "3.12"
+        
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install flask pytest
+        if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+        
+    - name: Run Tests
+      env:
+        DB_HOST: 127.0.0.1
+        DB_USER: flaskuser
+        DB_PASSWORD: flask123
+        DB_NAME: qr_access
+        SECRET_KEY: test_secret_key
+      run: |
+        # Usaremos pytest si se implementa, o scripts basales por ahora
+        export PYTHONPATH=.
+        pytest tests/ || echo "Add unit tests to fail on error"

@@ -1,0 +1,127 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="min-h-[calc(100vh-120px)] flex items-center justify-center py-6 px-4">
+    <div class="glass-panel w-full max-w-2xl p-0 overflow-hidden animate-fade-in-down shadow-2xl shadow-slate-200/50">
+        
+        <!-- Header -->
+        <div class="bg-white border-b border-slate-100 p-6 flex items-center justify-between">
+            <div class="flex items-center gap-4">
+                <a href="{{ url_for('admin.usuarios') }}" class="w-10 h-10 rounded-full bg-slate-50 flex items-center justify-center text-slate-500 hover:bg-slate-100 hover:text-primary-600 transition-colors tooltip relative" title="Volver">
+                    <i class="fas fa-arrow-left"></i>
+                </a>
+                <div>
+                    <h2 class="text-xl font-bold text-slate-800 flex items-center gap-2">
+                        <i class="fas fa-user-edit text-primary-500"></i> Editar Usuario
+                    </h2>
+                    <p class="text-xs text-slate-500 font-mono mt-0.5">ID: #{{ user.id }}</p>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Form Content -->
+        <div class="p-6 bg-slate-50/50">
+            <form method="POST" class="space-y-5">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                    <div>
+                        <label class="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1">Nombre Completo</label>
+                        <input type="text" name="nombre" value="{{ user.nombre }}" class="input-field py-2" required>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1">RUT / ID</label>
+                        <input type="text" name="rut" value="{{ user.rut }}" class="input-field py-2 font-mono" required>
+                    </div>
+                </div>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                    <div>
+                        <label class="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1">Correo Electrónico</label>
+                        <input type="email" name="correo" value="{{ user.correo }}" class="input-field py-2" required>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1">Empresa</label>
+                        <input type="text" name="empresa" value="{{ user.empresa }}" class="input-field py-2" required>
+                    </div>
+                </div>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-5 border-t border-slate-200 pt-5 mt-5">
+                    <div>
+                        <label class="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1">Rol en el Sistema</label>
+                        <div class="relative">
+                            <select name="rol" class="input-field py-2 appearance-none cursor-pointer">
+                                <option value="usuario" {% if user.rol == 'usuario' %}selected{% endif %}>Usuario Estándar</option>
+                                <option value="guardia" {% if user.rol == 'guardia' %}selected{% endif %}>Guardia / Escáner</option>
+                                <option value="admin" {% if user.rol == 'admin' %}selected{% endif %}>Administrador (2FA)</option>
+                            </select>
+                            <i class="fas fa-chevron-down absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none text-xs"></i>
+                        </div>
+                    </div>
+                    <div class="flex items-center pt-6">
+                        <label class="flex items-center gap-3 cursor-pointer group">
+                            <div class="relative flex items-center">
+                                <input type="checkbox" name="activo" class="sr-only peer" {% if user.activo %}checked{% endif %}>
+                                <div class="w-11 h-6 bg-slate-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary-600"></div>
+                            </div>
+                            <span class="text-sm font-medium text-slate-700 group-hover:text-slate-900">Cuenta Activa (Permitir Acceso)</span>
+                        </label>
+                    </div>
+                </div>
+                
+                <!-- Bottom Actions -->
+                <div class="flex flex-col sm:flex-row gap-3 pt-6 border-t border-slate-200">
+                    <button type="submit" class="btn-primary flex-1 py-2.5 flex justify-center items-center gap-2 font-bold shadow-md">
+                        <i class="fas fa-save"></i> Guardar Cambios
+                    </button>
+                    <a href="{{ url_for('admin.usuarios') }}" class="btn-secondary flex-1 py-2.5 flex justify-center items-center gap-2 font-semibold">
+                        <i class="fas fa-times"></i> Cancelar
+                    </a>
+                </div>
+            </form>
+        </div>
+        
+        <!-- QR Section Info -->
+        {% if user.qr_code %}
+        <div class="bg-slate-800 p-6 text-slate-300 flex flex-col sm:flex-row items-center justify-between gap-4">
+            <div class="flex items-center gap-4">
+                <div class="w-12 h-12 rounded-xl bg-slate-700 flex items-center justify-center border border-slate-600 shrink-0">
+                    <i class="fas fa-qrcode text-2xl text-slate-400"></i>
+                </div>
+                <div>
+                    <p class="text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1">Hash del QR Actual</p>
+                    <code class="text-sm font-mono bg-slate-900 text-teal-400 px-2 py-1 rounded inline-block">
+                        {{ user.qr_code[:12] }}...{{ user.qr_code[-4:] }}
+                    </code>
+                </div>
+            </div>
+            
+            <div class="text-right">
+                <p class="text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1">Estado QR</p>
+                <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider {% if user.is_qr_valid() %}bg-emerald-900/50 text-emerald-400 border border-emerald-800{% else %}bg-red-900/50 text-red-400 border border-red-800{% endif %}">
+                    <i class="fas {% if user.is_qr_valid() %}fa-check-circle{% else %}fa-times-circle{% endif %}"></i>
+                    {{ user.qr_status() }}
+                </span>
+            </div>
+        </div>
+        {% endif %}
+        
+    </div>
+</div>
+
+<style>
+.tooltip:hover::after {
+    content: attr(title);
+    position: absolute;
+    bottom: 110%;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #1e293b;
+    color: white;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 11px;
+    white-space: nowrap;
+    z-index: 50;
+    pointer-events: none;
+}
+</style>
+{% endblock %}

@@ -1,0 +1,201 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="space-y-6 fade-in">
+    <!-- Header -->
+    <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+            <h1 class="text-2xl font-bold text-slate-800 flex items-center gap-2">
+                <i class="fas fa-users-cog text-primary-600"></i>
+                Administración de Usuarios
+            </h1>
+            <p class="text-slate-500 text-sm mt-1">Gestión centralizada de cuentas, roles y accesos.</p>
+        </div>
+    </div>
+
+    <!-- Main Grid -->
+    <div class="grid grid-cols-1 xl:grid-cols-3 gap-6">
+        
+        <!-- Columna Izquierda: Formulario Nuevo Usuario -->
+        <div class="glass-panel col-span-1 flex flex-col h-fit">
+            <div class="p-5 border-b border-slate-100">
+                <h3 class="font-bold text-slate-800 flex items-center gap-2">
+                    <i class="fas fa-user-plus text-primary-500"></i>
+                    Nuevo Usuario
+                </h3>
+            </div>
+            
+            <form method="POST" class="p-5 space-y-4">
+                <div>
+                    <label class="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1">Nombre Completo</label>
+                    <input type="text" name="nombre" class="input-field py-2 text-sm" placeholder="Ej: Maria Gonzalez" required>
+                </div>
+                
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1">RUT / ID</label>
+                        <input type="text" name="rut" class="input-field font-mono text-sm py-2" placeholder="12345678-9" required>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1">Empresa</label>
+                        <input type="text" name="empresa" class="input-field py-2 text-sm" placeholder="Empresa S.A." required>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1">Correo Electrónico</label>
+                    <input type="email" name="correo" class="input-field py-2 text-sm" placeholder="maria@ejemplo.com" required>
+                </div>
+                
+                <div>
+                    <label class="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1">Rol en el Sistema</label>
+                    <div class="relative">
+                        <select name="rol" class="input-field py-2 text-sm appearance-none cursor-pointer">
+                            <option value="usuario">Usuario Estándar</option>
+                            <option value="guardia">Guardia / Escáner</option>
+                            <option value="admin">Administrador (2FA)</option>
+                        </select>
+                        <i class="fas fa-chevron-down absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none text-xs"></i>
+                    </div>
+                </div>
+
+                <div class="space-y-3 pt-2">
+                    <div>
+                        <label class="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1">Contraseña Inicial</label>
+                        <input type="password" name="password" class="input-field py-2 text-sm" placeholder="••••••••" required>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1">Confirmar Contraseña</label>
+                        <input type="password" name="password2" class="input-field py-2 text-sm" placeholder="••••••••" required>
+                    </div>
+                </div>
+                
+                <div class="pt-2 flex items-center gap-2">
+                    <input type="checkbox" name="activo" id="check-activo" class="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded" checked>
+                    <label for="check-activo" class="text-sm text-slate-700 cursor-pointer">Cuenta Activa inmediatamente</label>
+                </div>
+                
+                <div class="pt-4">
+                    <button type="submit" class="btn-primary w-full py-2.5 flex items-center justify-center gap-2 shadow-sm font-semibold">
+                        <i class="fas fa-save"></i> Registrar Usuario
+                    </button>
+                </div>
+            </form>
+        </div>
+        
+        <!-- Columna Derecha: Tabla de Usuarios -->
+        <div class="glass-panel col-span-1 xl:col-span-2 flex flex-col overflow-hidden">
+            <div class="p-5 border-b border-slate-100 flex items-center justify-between bg-white rounded-t-2xl">
+                <h3 class="font-bold text-slate-800 flex items-center gap-2">
+                    <i class="fas fa-list text-primary-500"></i>
+                    Directorio de Usuarios
+                </h3>
+                <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold bg-primary-100 text-primary-800">
+                    Total: {{ users|length }}
+                </span>
+            </div>
+            
+            <div class="overflow-x-auto flex-grow max-h-[800px] overflow-y-auto">
+                <table class="w-full text-left border-collapse">
+                    <thead class="sticky top-0 bg-slate-50 shadow-sm z-10">
+                        <tr>
+                            <th class="px-4 py-3 text-xs font-semibold text-slate-500 border-b border-slate-200">Usuario</th>
+                            <th class="px-4 py-3 text-xs font-semibold text-slate-500 border-b border-slate-200">Rol</th>
+                            <th class="px-4 py-3 text-xs font-semibold text-slate-500 border-b border-slate-200">Estado</th>
+                            <th class="px-4 py-3 text-xs font-semibold text-slate-500 border-b border-slate-200 text-right">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-100 bg-white">
+                        {% for user in users %}
+                        <tr class="hover:bg-slate-50 transition-colors group">
+                            <td class="px-4 py-3">
+                                <div class="flex items-center gap-3">
+                                    <div class="h-8 w-8 rounded-full bg-slate-100 text-slate-600 flex items-center justify-center font-bold text-sm shrink-0">
+                                        {{ user.nombre[0]|upper }}
+                                    </div>
+                                    <div>
+                                        <div class="text-sm font-bold text-slate-900">{{ user.nombre }}</div>
+                                        <div class="text-xs text-slate-500 font-mono">{{ user.rut }} &bull; {{ user.correo }}</div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="px-4 py-3 whitespace-nowrap">
+                                {% if user.rol == 'admin' %}
+                                    <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-medium bg-purple-100 text-purple-800 border border-purple-200">
+                                        <i class="fas fa-shield-alt text-[10px]"></i> ADMIN
+                                    </span>
+                                {% elif user.rol == 'guardia' %}
+                                    <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-medium bg-amber-100 text-amber-800 border border-amber-200">
+                                        <i class="fas fa-eye text-[10px]"></i> GUARDIA
+                                    </span>
+                                {% else %}
+                                    <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-medium bg-slate-100 text-slate-700 border border-slate-200">
+                                        <i class="fas fa-user text-[10px]"></i> USUARIO
+                                    </span>
+                                {% endif %}
+                            </td>
+                            <td class="px-4 py-3 whitespace-nowrap">
+                                {% if user.activo %}
+                                    <span class="inline-flex px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-700">Activo</span>
+                                {% else %}
+                                    <span class="inline-flex px-2 py-0.5 rounded text-xs font-medium bg-red-100 text-red-700">Inactivo</span>
+                                {% endif %}
+                            </td>
+                            <td class="px-4 py-3 text-right">
+                                <div class="flex justify-end gap-1 opacity-100 xl:opacity-0 xl:group-hover:opacity-100 transition-opacity">
+                                    <a href="{{ url_for('admin.edit_user', user_id=user.id) }}" 
+                                       class="p-1.5 text-blue-600 hover:bg-blue-50 rounded-md transition-colors tooltip relative" title="Editar">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
+                                    <a href="{{ url_for('admin.toggle_user', user_id=user.id) }}" 
+                                       class="p-1.5 {{ 'text-red-500 hover:bg-red-50' if user.activo else 'text-green-600 hover:bg-green-50' }} rounded-md transition-colors tooltip relative" 
+                                       title="{{ 'Desactivar Cuenta' if user.activo else 'Activar Cuenta' }}">
+                                        <i class="fas fa-{{ 'ban' if user.activo else 'check' }}"></i>
+                                    </a>
+                                    <a href="{{ url_for('admin.resend_qr', user_id=user.id) }}" 
+                                       class="p-1.5 text-emerald-600 hover:bg-emerald-50 rounded-md transition-colors tooltip relative" title="Reenviar Email con QR">
+                                        <i class="fas fa-envelope"></i>
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="4" class="px-6 py-12 text-center text-slate-500">
+                                <i class="fas fa-users-slash text-4xl mb-3 text-slate-300 block"></i>
+                                <span class="text-sm">No hay usuarios registrados en la plataforma.</span>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.fade-in { animation: fadeIn 0.4s ease-out; }
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+/* Tooltips locales */
+.tooltip:hover::after {
+    content: attr(title);
+    position: absolute;
+    bottom: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #1e293b;
+    color: white;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 11px;
+    white-space: nowrap;
+    margin-bottom: 5px;
+    z-index: 50;
+    pointer-events: none;
+}
+</style>
+{% endblock %}

@@ -1,0 +1,116 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="space-y-6 fade-in">
+    <!-- Header -->
+    <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+            <h1 class="text-2xl font-bold text-slate-800 flex items-center gap-2">
+                <i class="fas fa-qrcode text-primary-600"></i>
+                Mi Credencial Digital
+            </h1>
+            <p class="text-slate-500 text-sm mt-1">Tu pase de acceso personal e intransferible.</p>
+        </div>
+    </div>
+    
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
+        <!-- Tarjeta Izquierda: Info Personal -->
+        <div class="glass-panel p-6">
+            <h3 class="font-bold text-slate-800 flex items-center gap-2 mb-6 border-b border-slate-100 pb-4">
+                <i class="fas fa-id-card text-primary-500"></i> Información de Empleado
+            </h3>
+            
+            <div class="space-y-5">
+                <div class="flex items-center justify-between p-4 bg-slate-50 rounded-xl border border-slate-100 hover:border-primary-200 hover:bg-white transition-all shadow-sm">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center">
+                            <i class="fas fa-user-circle text-xl"></i>
+                        </div>
+                        <div>
+                            <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Nombre Completo</p>
+                            <p class="text-base font-bold text-slate-800">{{ user.nombre }}</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="flex items-center justify-between p-4 bg-slate-50 rounded-xl border border-slate-100 hover:border-primary-200 hover:bg-white transition-all shadow-sm">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center">
+                            <i class="fas fa-building text-xl"></i>
+                        </div>
+                        <div>
+                            <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Empresa / Depto</p>
+                            <p class="text-base font-bold text-slate-800">{{ user.empresa }}</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flex items-center justify-between p-4 bg-slate-50 rounded-xl border border-slate-100 hover:border-primary-200 hover:bg-white transition-all shadow-sm">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center">
+                            <i class="fas fa-id-badge text-xl"></i>
+                        </div>
+                        <div>
+                            <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Perfil Autorizado</p>
+                            <span class="inline-flex mt-1 items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-bold uppercase tracking-wider bg-emerald-100 text-emerald-800 border border-emerald-200">
+                                {{ user.rol }}
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Tarjeta Derecha: Código QR -->
+        <div class="glass-panel p-6 text-center h-full flex flex-col justify-center min-h-[450px]">
+            <h3 class="font-bold text-slate-800 flex items-center justify-center gap-2 mb-2">
+                <i class="fas fa-mobile-alt text-primary-500"></i> Código de Acceso
+            </h3>
+            
+            {% if qr_activo %}
+                <div class="relative inline-block mx-auto mt-6 mb-4 group cursor-pointer transition-transform hover:scale-105 duration-300">
+                    <div class="absolute -inset-1 bg-gradient-to-r from-primary-400 to-indigo-500 rounded-2xl blur opacity-25 group-hover:opacity-75 transition duration-1000 group-hover:duration-200"></div>
+                    <div class="relative bg-white p-4 rounded-2xl border border-slate-100 shadow-xl">
+                        <img src="{{ qr_url }}" alt="Código QR de Acceso" class="w-56 h-56 object-contain rounded-lg">
+                    </div>
+                </div>
+                
+                <div class="inline-flex mt-2 mb-6 items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold text-amber-700 bg-amber-50 border border-amber-200 shadow-sm mx-auto">
+                    <i class="fas fa-clock fa-spin" style="animation-duration: 4s;"></i> {{ exp_text }}
+                </div>
+                
+                <div class="flex flex-col sm:flex-row justify-center gap-3 mt-4">
+                    <a href="{{ qr_url }}" download="Credencial_QR_{{ user.nombre }}.png" class="btn-primary py-2.5 px-6 flex items-center justify-center gap-2 font-semibold shadow-md">
+                        <i class="fas fa-download"></i> Guardar Imagen
+                    </a>
+                    
+                    <form method="POST" class="m-0">
+                        <button type="submit" class="btn-secondary w-full py-2.5 px-6 flex items-center justify-center gap-2 font-semibold shadow-sm">
+                            <i class="fas fa-sync-alt"></i> Regenerar
+                        </button>
+                    </form>
+                </div>
+            {% else %}
+                <div class="flex flex-col items-center justify-center py-12 px-4 bg-slate-50/50 rounded-2xl border-2 border-dashed border-slate-200 mt-6">
+                    <i class="fas fa-qrcode text-6xl text-slate-300 mb-4"></i>
+                    <p class="text-lg font-bold text-slate-600 mb-1">Sin Credencial Activa</p>
+                    <p class="text-sm text-slate-500 mb-6 max-w-xs">No tienes un código QR generado o ha sido revocado por seguridad.</p>
+                    <form method="POST">
+                        <button type="submit" class="btn-primary py-3 px-8 flex items-center justify-center gap-2 font-bold shadow-lg shadow-primary-500/30">
+                            <i class="fas fa-plus-circle"></i> Solicitar Nuevo Código
+                        </button>
+                    </form>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<style>
+.fade-in { animation: fadeIn 0.5s ease-out; }
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(15px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+</style>
+{% endblock %}
